@@ -1,0 +1,28 @@
+{
+    "tier1": [
+        "phantom_lg",
+        "raiden8",
+        "schtop",
+        "shutdown2_lg2",
+        "monkey_lg",
+        "stowaway2_lg2"
+    ],
+    "tier2": [
+        "2kfort5_lg",
+        "alchimy_lg",
+        "fry_baked_lg",
+	"hectic_b3",
+        "openfire_lowgrens",
+        "siden_lg",
+        "siege"
+    ],
+    "tier3": [
+        "chimkey_lg",
+        "ss_nyx_ectfc",
+        "mortality_lg",
+	"destroy_l",
+        "2mesa3_lg",
+        "roasted_lg",
+        "voltage_lg"
+    ]
+}
