@@ -58,7 +58,7 @@ def hltv_file_handler(ssh_client):
     try:
         ftp = ssh_client.open_sftp()
         output_filename = None
-        ftp.chdir("/home/ubuntu/Steam/steamcmd/tfc/tfc/HLTV")
+        ftp.chdir("/root/.steam/steamcmd/tfc/tfc/HLTV")
         # getting lists
 
         HLTVListNameDesc = list(
@@ -109,7 +109,7 @@ def hampalyze_logs_sftp(ssh_client):
     ftp = ssh_client.open_sftp()
     # hardcoding directory, sorry
     ftp.chdir(
-        "/home/ubuntu/Steam/steamcmd/tfc/tfc/logs"
+        "/root/.steam/steamcmd/tfc/tfc/logs"
     )  # Navigate to the logs subfolder
 
     # Get the list of files in the logs folder
@@ -187,7 +187,7 @@ def hampalyze_logs():
     ftp = FTP()
     ftp.connect(os.getenv("FTP_SERVER"), 21)
     ftp.login(os.getenv("FTP_USER"), os.getenv("FTP_PASSWD"))
-    ftp.cwd("/tfc/logs")  # Navigate to the logs subfolder
+    ftp.cwd("/logs")  # Navigate to the logs subfolder
 
     # Get the list of files in the logs folder
     logFiles = list(
@@ -284,7 +284,7 @@ if os.path.exists("prevteams.json"):
 else:
     previousTeam = []
 
-emoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
+emoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣"]
 mapList = []
 
 playerList = {}
@@ -383,7 +383,7 @@ def PickMaps(initial=False):
 
     mapChoices = []
     if initial:
-        for i in range(3):
+        for i in range(6):
             if i == 0:
                 mapname = random.choice(mapList["tier1"] + mapList["tier2"])
                 RemoveMap(mapname)
@@ -396,29 +396,44 @@ def PickMaps(initial=False):
                 mapname = random.choice(mapList["tier3"])
                 RemoveMap(mapname)
                 mapChoices.append(MapChoice(mapname))
-    else:
-        for i in range(3):
-            if i == 0:
-                mapname = random.choice(mapList["tier1"])
+            elif i == 3:
+                mapname = random.choice(mapList["tier1"] + mapList["tier2"])
                 RemoveMap(mapname)
-                mapChoices.append(
-                    MapChoice(
-                        mapname,
-                    )
-                )
+                mapChoices.append(MapChoice(mapname))
+            elif i == 4:
+                mapname = random.choice(mapList["tier2"] + mapList["tier3"])
+                RemoveMap(mapname)
+                mapChoices.append(MapChoice(mapname))
+            elif i == 5:
+                mapname = random.choice(mapList["tier3"])
+                RemoveMap(mapname)
+                mapChoices.append(MapChoice(mapname))
+    else:
+        for i in range(6):
+            if i == 0:
+                mapname = random.choice(mapList["tier1"] + mapList["tier2"])
+                RemoveMap(mapname)
+                mapChoices.append(MapChoice(mapname))
             elif i == 1:
                 mapname = random.choice(mapList["tier1"] + mapList["tier2"])
                 RemoveMap(mapname)
-                mapChoices.append(
-                    MapChoice(
-                        mapname,
-                    )
-                )
+                mapChoices.append(MapChoice(mapname))
             elif i == 2:
-                mapname = random.choice(mapList["tier2"])
+                mapname = random.choice(mapList["tier1"] + mapList["tier2"])
                 RemoveMap(mapname)
                 mapChoices.append(MapChoice(mapname))
-
+            elif i == 3:
+                mapname = random.choice(mapList["tier1"] + mapList["tier2"])
+                RemoveMap(mapname)
+                mapChoices.append(MapChoice(mapname))
+            elif i == 4:
+                mapname = random.choice(mapList["tier3"] + mapList["tier1"] + mapList["tier2"])
+                RemoveMap(mapname)
+                mapChoices.append(MapChoice(mapname))
+            elif i == 5:
+                mapname = random.choice(mapList["tier3"] + mapList["tier1"] + mapList["tier2"])
+                RemoveMap(mapname)
+                mapChoices.append(MapChoice(mapname))
 
 def RemoveMap(givenMap):
     global mapList
@@ -823,7 +838,7 @@ async def lockmap(ctx):
             RecordMapAndTeams(winningMap)
 
             await ctx.send("The winning map is: " + winningMap)
-            await ctx.send("Please join the server.")
+            await ctx.send("Please join the server: https://shorturl.at/QYOl9")
             await ctx.send(f"connect {SERVER_IP}:27015;password " + SERVER_PASSWORD)
             await DePopulatePickup(ctx)
 
@@ -989,16 +1004,23 @@ async def get_logs(ctx):
         )
         logs_link = hampalyze_logs_sftp(ssh_client)
         output_zipfile = hltv_file_handler(ssh_client)
+        if output_zipfile is not None:
+            await stats_channel.send(file=discord.File(output_zipfile), content=logs_link)
+            os.remove(output_zipfile)
         ssh_client.close()
     except paramiko.ssh_exception.NoValidConnectionsError:
         # Assumption: If SFTP connection failed, try FTP instead
         logs_link = hampalyze_logs()
-    if output_zipfile is not None:
+        await stats_channel.send(logs_link)
+    except paramiko.ssh_exception.AuthenticationException:
+        logs_link = hampalyze_logs()
+        await stats_channel.send(logs_link)
+    """if output_zipfile is not None:
         await stats_channel.send(file=discord.File(output_zipfile), content=logs_link)
         os.remove(output_zipfile)
     else:
         await stats_channel.send(logs_link)
-
+    """
 
 @client.event
 async def on_ready():
