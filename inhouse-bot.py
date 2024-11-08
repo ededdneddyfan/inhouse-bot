@@ -838,7 +838,7 @@ async def lockmap(ctx):
             RecordMapAndTeams(winningMap)
 
             await ctx.send("The winning map is: " + winningMap)
-            await ctx.send("Please join the server: https://shorturl.at/QYOl9")
+            await ctx.send("Please join the server: https://tinyurl.com/etfcvultr")
             await ctx.send(f"connect {SERVER_IP}:27015;password " + SERVER_PASSWORD)
             await DePopulatePickup(ctx)
 
