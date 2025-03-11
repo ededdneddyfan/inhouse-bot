@@ -159,7 +159,7 @@ def hampalyze_logs_sftp(ssh_client):
 
     # Send the retrieved log files to hampalyzer
     hampalyze = (
-        "curl -X POST -F force=on -F logs[]=@%s -F logs[]=@%s http://app.hampalyzer.com/api/parseGame"
+        "curl -X POST -F force=on -F logs[]=@%s -F logs[]=@%s https://www.tfcstats.com/api/parsePickup"
         % (round1log, round2log)
     )
     # Capture the result
@@ -169,7 +169,7 @@ def hampalyze_logs_sftp(ssh_client):
     # Check if it worked or not
     status = json.loads(output)
     if "success" in status:
-        site = "http://app.hampalyzer.com" + status["success"]["path"]
+        site = status["success"]["path"]
         print("Parsed logs available: %s" % site)
         # not using json stuff currently
         # with open('prevlog.json', 'w') as f:
@@ -249,7 +249,7 @@ def hampalyze_logs():
 
     # Send the retrieved log files to hampalyzer
     hampalyze = (
-        "curl -X POST -F logs[]=@%s -F logs[]=@%s http://app.hampalyzer.com/api/parseGame"
+        "curl -X POST -F logs[]=@%s -F logs[]=@%s https://www.tfcstats.com/api/parsePickup"
         % (round1log, round2log)
     )
     # Capture the result
@@ -259,7 +259,7 @@ def hampalyze_logs():
     # Check if it worked or not
     status = json.loads(output)
     if "success" in status:
-        site = "http://app.hampalyzer.com" + status["success"]["path"]
+        site = status["success"]["path"]
         print("Parsed logs available: %s" % site)
         # not using json stuff currently
         # with open('prevlog.json', 'w') as f:
@@ -631,6 +631,7 @@ def GenerateMapVoteEmbed():
 
 
 @client.command(pass_context=True, name="+")
+@commands.has_role("TFC")
 async def plusPlus(ctx):
     if ctx.prefix == "+":
         await add(ctx)
@@ -643,6 +644,7 @@ async def minusMinus(ctx):
 
 
 @client.command(pass_context=True)
+@commands.has_role("TFC")
 async def add(ctx):
     global playerNumber
     global playerList
@@ -765,6 +767,7 @@ def processVote(player: discord.Member = None, vote=None):
 
 
 @client.command(pass_context=True, aliases=["fv"])
+@commands.has_any_role('admin', 'Pickup Ranger')
 async def lockmap(ctx):
     global mapVote
     global mapVoteMessage
@@ -1025,6 +1028,41 @@ async def get_logs(ctx):
 @client.event
 async def on_ready():
     print(f"{client.user} is aliiiiiive!")
+
+@client.command(pass_context=True)
+@commands.has_role("admin")
+async def reboot(ctx):
+    """Reboot the Vultr instance. Admin only command."""
+    if ctx.channel.name != CHANNEL_NAME:
+        return
+
+    vultr_api_key = os.getenv("VULTR_API_KEY")
+    instance_id = "4ba36623-81ab-4b99-815b-922598d0b8a8"
+    
+    headers = {
+        "Authorization": f"Bearer {vultr_api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "instance_ids": [instance_id]
+    }
+
+    try:
+        response = urllib.request.Request(
+            "https://api.vultr.com/v2/instances/reboot",
+            data=json.dumps(data).encode('utf-8'),
+            headers=headers,
+            method='POST'
+        )
+        
+        with urllib.request.urlopen(response) as f:
+            if f.status == 204:  # Successful reboot returns 204 No Content
+                await ctx.send("🔄 Server reboot initiated successfully!")
+            else:
+                await ctx.send(f"❌ Reboot failed with status code: {f.status}")
+    except Exception as e:
+        await ctx.send(f"❌ Error rebooting server: {str(e)}")
 
 
 client.run(TOKEN)
